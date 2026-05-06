@@ -20,8 +20,13 @@ const VALID_PACKAGES = [
 ];
 const HOST = '20.207.122.201';
 const PATH = '/evaluation-service/logs';
-const ACCESS_TOKEN = process.env.ACCESS_TOKEN || '';
+const ACCESS_TOKEN = process.env.ACCESS_TOKEN ;
 function Log(stack, level, packageName, message) {
+  // Check if all parameters are valid
+  if (!VALID_STACKS.includes(stack) || !VALID_LEVELS.includes(level) || !VALID_PACKAGES.includes(packageName) || typeof message !== 'string') {
+    return;
+  }
+  
   const payload = JSON.stringify({
     stack,
     level,
