@@ -87,5 +87,9 @@ Do not fetch notifications on every page load for every student. Use a lazy load
 ### Stage 5
 The current code is bad because it sends email and DB writes one by one, so it fails when many students are there.
 Better is to queue the work: save notification records first, then send emails using a background process or worker.
-You can use Redis / Kafka based on traffic for the queue and then use Celery as your worker/ background process. 
+You can use Redis / Kafka based on traffic for the queue and then use Celery as your worker/ background process.
 This makes it more reliable and faster because the app does not wait for each email to finish.
+
+### Stage 6
+The `stage6.py` script gets the API data and prints the top 10 notifications.
+Run it with `python stage6.py`.
