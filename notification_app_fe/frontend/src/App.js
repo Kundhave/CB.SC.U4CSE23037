@@ -1,31 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import './App.css';
 
-const API_URL = process.env.REACT_APP_NOTIFICATIONS_URL || 'http://20.207.122.201/evaluation-service/notifications';
+const API_URL = process.env.REACT_APP_NOTIFICATIONS_URL || 'http://localhost:4000/evaluation-service/notifications';
 const TYPE_WEIGHT = { placement: 3, result: 2, event: 1 };
 const TYPES = ['all', 'Event', 'Result', 'Placement'];
 
-function normalizeId(notification) {
-  return (
-    notification.id ||
-    notification.notification_id ||
-    `${notification.type || ''}|${notification.timestamp || ''}|${notification.message || ''}`
-  );
-}
-
 function scoreNotification(notification) {
-  const type = String(notification.type || notification.Type || '').toLowerCase();
+  const type = String(notification.type || '').toLowerCase();
   const weight = TYPE_WEIGHT[type] || 1;
-  const ts = notification.timestamp || notification.Timestamp || '';
-  const time = Date.parse(ts) || 0;
-  return weight * 1000000000 + Math.floor(time / 1000);
+  const time = Date.parse(notification.timestamp || notification.Timestamp || '') || 0;
+  return weight * 1e9 + Math.floor(time / 1000);
 }
 
 function buildUrl(type, page) {
   const params = new URLSearchParams({ limit: '50', page: String(page) });
-  if (type && type !== 'all') {
-    params.set('notification_type', type);
-  }
+  if (type !== 'all') params.set('notification_type', type);
   return `${API_URL}?${params.toString()}`;
 }
 
@@ -36,82 +25,48 @@ function App() {
   const [view, setView] = useState('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [viewedIds, setViewedIds] = useState(() => {
-    try {
-      return new Set(JSON.parse(localStorage.getItem('viewedNotifications') || '[]'));
-    } catch {
-      return new Set();
-    }
-  });
+  const [viewed, setViewed] = useState(new Set());
 
   useEffect(() => {
-    const controller = new AbortController();
     setLoading(true);
     setError('');
 
-    fetch(buildUrl(filterType, page), { signal: controller.signal })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Server returned ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((payload) => {
-        const list = Array.isArray(payload.notifications) ? payload.notifications : [];
-        setNotifications(list);
-      })
-      .catch((err) => {
-        if (err.name !== 'AbortError') {
-          setError(err.message || 'Unable to load notifications');
-          setNotifications([]);
-        }
-      })
+    fetch(buildUrl(filterType, page))
+      .then((res) => res.ok ? res.json() : Promise.reject(new Error(`Server ${res.status}`)))
+      .then((data) => setNotifications(Array.isArray(data.notifications) ? data.notifications : []))
+      .catch((err) => setError(err.message || 'Unable to load notifications'))
       .finally(() => setLoading(false));
-
-    return () => controller.abort();
   }, [filterType, page]);
 
-  useEffect(() => {
-    localStorage.setItem('viewedNotifications', JSON.stringify(Array.from(viewedIds)));
-  }, [viewedIds]);
-
-  const topNotifications = useMemo(() => {
-    return [...notifications]
-      .map((notif) => ({ score: scoreNotification(notif), notif }))
+  const topNotifications = useMemo(
+    () => [...notifications]
+      .map((notification) => ({ score: scoreNotification(notification), notification }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 10)
-      .map((entry) => entry.notif);
-  }, [notifications]);
+      .map((item) => item.notification),
+    [notifications]
+  );
 
-  const handleMarkViewed = (notification) => {
-    const id = normalizeId(notification);
-    if (!viewedIds.has(id)) {
-      setViewedIds((current) => new Set(current).add(id));
-    }
+  const markViewed = (notification) => {
+    const id = notification.id || `${notification.type}|${notification.timestamp}|${notification.message}`;
+    setViewed((next) => new Set(next).add(id));
   };
 
-  const renderList = (list) => {
-    if (list.length === 0) {
-      return <div className="empty-state">No notifications found.</div>;
-    }
+  const renderNotifications = (list) => {
+    if (!list.length) return <div className="empty-state">No notifications found.</div>;
 
     return (
       <div className="notification-list">
         {list.map((notification) => {
-          const id = normalizeId(notification);
-          const isViewed = viewedIds.has(id);
+          const id = notification.id || `${notification.type}|${notification.timestamp}|${notification.message}`;
+          const isViewed = viewed.has(id);
           return (
-            <button
-              key={id}
-              type="button"
-              className={`notification-card ${isViewed ? 'viewed' : 'new'}`}
-              onClick={() => handleMarkViewed(notification)}
-            >
+            <button key={id} className={`notification-card ${isViewed ? 'viewed' : ''}`} onClick={() => markViewed(notification)}>
               <div className="notification-meta">
-                <span className="notification-type">{notification.type || notification.Type || 'Unknown'}</span>
-                <span className="notification-time">{notification.timestamp || notification.Timestamp || 'No timestamp'}</span>
+                <span>{notification.type || 'Unknown'}</span>
+                <span>{notification.timestamp || 'No timestamp'}</span>
               </div>
-              <div className="notification-message">{notification.message || notification.Message || 'No message'}</div>
+              <div className="notification-message">{notification.message || 'No message'}</div>
               {!isViewed && <span className="notification-badge">NEW</span>}
             </button>
           );
@@ -124,70 +79,51 @@ function App() {
     <div className="app-shell">
       <header className="app-header">
         <div>
-          <p className="brand">Notification App</p>
-          <p className="subtitle">Stage 7: All Notifications, Priority view, filter, paging, and viewed state.</p>
+          <h1>Notification App</h1>
+          <p>View all notifications and priority notifications with type filtering.</p>
         </div>
         <div className="tabs">
           <button className={view === 'all' ? 'active' : ''} onClick={() => setView('all')}>
-            All Notifications
+            All
           </button>
           <button className={view === 'priority' ? 'active' : ''} onClick={() => setView('priority')}>
-            Priority Notifications
+            Priority
           </button>
         </div>
       </header>
 
-      <section className="controls-panel">
-        <div className="control-group">
-          <label htmlFor="type-select">Notification Type</label>
-          <select id="type-select" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+      <div className="controls-panel">
+        <label>
+          Type
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
             {TYPES.map((type) => (
               <option key={type} value={type}>
                 {type === 'all' ? 'All types' : type}
               </option>
             ))}
           </select>
+        </label>
+        <div className="page-controls">
+          <button onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page === 1}>
+            Prev
+          </button>
+          <span>Page {page}</span>
+          <button onClick={() => setPage((value) => value + 1)}>Next</button>
         </div>
-        <div className="control-group">
-          <label>Page</label>
-          <div className="page-controls">
-            <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
-              Prev
-            </button>
-            <span>{page}</span>
-            <button type="button" onClick={() => setPage((p) => p + 1)}>
-              Next
-            </button>
+      </div>
+
+      {error && <div className="error-panel">{error}</div>}
+      {loading && <div className="loading">Loading notifications...</div>}
+
+      {!loading && !error && (
+        <div className="section">
+          <div className="section-header">
+            <h2>{view === 'all' ? 'All Notifications' : 'Top 10 Priority Notifications'}</h2>
+            <p>{view === 'all' ? `${notifications.length} loaded` : 'Sorted by type weight and time'}</p>
           </div>
+          {renderNotifications(view === 'all' ? notifications : topNotifications)}
         </div>
-      </section>
-
-      <main className="main-content">
-        {error && <div className="error-panel">{error}</div>}
-        {loading && <div className="loading">Loading notifications...</div>}
-
-        {!loading && !error && (
-          <>
-            {view === 'all' ? (
-              <div className="section">
-                <div className="section-header">
-                  <h2>All Notifications</h2>
-                  <p>{notifications.length} notifications loaded.</p>
-                </div>
-                {renderList(notifications)}
-              </div>
-            ) : (
-              <div className="section">
-                <div className="section-header">
-                  <h2>Top 10 Priority Notifications</h2>
-                  <p>Sorted by type weight and timestamp.</p>
-                </div>
-                {renderList(topNotifications)}
-              </div>
-            )}
-          </>
-        )}
-      </main>
+      )}
     </div>
   );
 }

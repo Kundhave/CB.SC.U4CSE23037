@@ -1,30 +1,27 @@
 .app-shell {
   min-height: 100vh;
   padding: 18px;
-  color: #1e1e1e;
+  background: #f4f6fb;
+  color: #1d2738;
   font-family: Inter, system-ui, sans-serif;
-  background: #f5f7fb;
 }
 
 .app-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
 }
 
-.brand {
+.app-header h1 {
   margin: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
+  font-size: 1.6rem;
 }
 
-.subtitle {
+.app-header p {
   margin: 4px 0 0;
   color: #4f5b78;
-  max-width: 720px;
 }
 
 .tabs {
@@ -33,19 +30,19 @@
 }
 
 .tabs button {
-  border: 1px solid #d9d9d9;
+  border: 1px solid #d3d8e2;
   background: white;
   padding: 10px 16px;
   border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
-  color: #2c3e50;
+  color: #2e3d54;
 }
 
 .tabs button.active,
 .tabs button:hover {
-  border-color: #4a90e2;
-  background: #e8f0ff;
+  border-color: #3d7bff;
+  background: #e9f1ff;
 }
 
 .controls-panel {
@@ -55,70 +52,59 @@
   margin-bottom: 18px;
 }
 
-.control-group {
+.controls-panel label,
+.page-controls {
   display: grid;
   gap: 8px;
 }
 
-.control-group label {
-  font-size: 0.95rem;
-  color: #4f5b78;
-}
-
-.control-group select,
+.controls-panel select,
 .page-controls button {
-  border: 1px solid #d9d9d9;
+  border: 1px solid #d3d8e2;
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   font-size: 1rem;
-  outline: none;
   background: white;
 }
 
 .page-controls {
-  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  grid-auto-flow: column;
 }
 
 .page-controls button:hover:not(:disabled) {
-  border-color: #4a90e2;
+  border-color: #3d7bff;
   background: #eef4ff;
 }
 
 .page-controls button:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
-}
-
-.main-content {
-  display: grid;
-  gap: 18px;
 }
 
 .section {
   background: white;
-  border: 1px solid #e6eaf2;
+  border: 1px solid #e1e6ef;
   border-radius: 18px;
   padding: 18px;
 }
 
 .section-header {
   display: flex;
-  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 18px;
 }
 
 .section-header h2 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
 }
 
 .section-header p {
   margin: 0;
-  color: #5f6f89;
+  color: #5f6f8d;
 }
 
 .notification-list {
@@ -129,25 +115,21 @@
 .notification-card {
   width: 100%;
   text-align: left;
-  background: #fbfcff;
-  border: 1px solid #e1e6f1;
-  border-radius: 15px;
+  background: #fafbff;
+  border: 1px solid #d9e2f1;
+  border-radius: 16px;
   padding: 16px;
   cursor: pointer;
-  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  transition: transform 0.16s ease, border-color 0.16s ease;
 }
 
 .notification-card:hover {
   transform: translateY(-1px);
-  border-color: #4a90e2;
+  border-color: #3d7bff;
 }
 
 .notification-card.viewed {
-  opacity: 0.75;
-}
-
-.notification-card.new {
-  background: #ffffff;
+  opacity: 0.8;
 }
 
 .notification-meta {
@@ -155,52 +137,47 @@
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 8px;
-  color: #4f5b78;
-  font-size: 0.92rem;
-}
-
-.notification-type {
-  font-weight: 700;
-  text-transform: capitalize;
+  margin-bottom: 10px;
+  color: #5f6f8d;
+  font-size: 0.95rem;
 }
 
 .notification-message {
-  color: #1f2a44;
-  font-size: 1rem;
+  color: #17233d;
   line-height: 1.5;
 }
 
 .notification-badge {
   display: inline-flex;
   margin-top: 12px;
-  background: #ff6b6b;
+  background: #3d7bff;
   color: white;
-  padding: 4px 10px;
+  padding: 5px 10px;
   border-radius: 999px;
   font-size: 0.78rem;
-  letter-spacing: 0.02em;
 }
 
 .empty-state,
 .loading,
 .error-panel {
-  padding: 18px;
-  border-radius: 16px;
-  background: #fff7e6;
-  color: #7a5a2d;
-  border: 1px solid #f5dab0;
+  padding: 16px;
+  border-radius: 14px;
+  background: #fff8e5;
+  color: #7a5f1b;
+  border: 1px solid #f2d8a7;
 }
 
 .error-panel {
   background: #ffe9e9;
-  color: #8b1f1f;
-  border-color: #f1c2c2;
+  color: #8f1f1f;
+  border-color: #f2b7b7;
 }
 
 @media (max-width: 640px) {
   .app-header,
-  .section-header {
+  .section-header,
+  .controls-panel,
+  .page-controls {
     flex-direction: column;
     align-items: stretch;
   }
